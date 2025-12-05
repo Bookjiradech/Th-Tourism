@@ -1,0 +1,58 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique @db.VarChar(191)
+  password  String    @db.VarChar(255)
+  role      String    @default("user") // "user" | "admin"
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  favorites Favorite[]
+}
+
+model TourismLocal {
+  id         Int       @id @default(autoincrement())
+  type       Int
+  name       String    @db.VarChar(255)
+  detail     String?   @db.Text
+  province   String?   @db.VarChar(100)
+  district   String?   @db.VarChar(100)
+  region     String?   @db.VarChar(50)
+  latitude   Decimal?  @db.Decimal(10, 6)
+  longitude  Decimal?  @db.Decimal(10, 6)
+  introImage String?   @db.VarChar(500)
+  url        String?   @db.VarChar(500)
+  isOpen     Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  favorites  Favorite[]
+}
+
+model Favorite {
+  id              Int           @id @default(autoincrement())
+  userId          Int
+  tourismLocalId  Int?
+  
+  // สำหรับข้อมูลจาก External API (TAT)
+  externalSource  String?       @db.VarChar(50)
+  externalId      String?       @db.VarChar(100)
+  externalName    String?       @db.VarChar(255)
+  externalDetail  String?       @db.Text
+  externalImage   String?       @db.VarChar(500)
+  externalProvince String?      @db.VarChar(100)
+  
+  createdAt       DateTime      @default(now())
+
+  user         User          @relation(fields: [userId], references: [id])
+  tourismLocal TourismLocal? @relation(fields: [tourismLocalId], references: [id])
+
+  @@index([userId, tourismLocalId])
+  @@index([userId, externalSource, externalId])
+}
